@@ -1,10 +1,29 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
+import { ConfigModule } from '@nestjs/config';
+import { AuthModule } from './api/v1/modules/auth/auth.module';
+import { UserModule } from './api/v1/modules/user/user.module';
+import { SupabaseModule } from './api/v1/modules/supabase/supabase.module';
+import { CoreModule } from './api/v1/modules/core/core.module';
+import { MediaModule } from './api/v1/modules/media/media.module';
+import { ClerkClientProvider } from 'src/common/providers/clerk-client.provider';
+
+import { WinstonModule } from 'nest-winston';
+import { winstonLogger } from 'src/common/loggers/logger';
 
 @Module({
-    imports: [],
-    controllers: [AppController],
-    providers: [AppService],
+    imports: [
+        ConfigModule.forRoot({
+            isGlobal: true,
+        }),
+        WinstonModule.forRoot({
+            instance: winstonLogger,
+        }),
+        SupabaseModule,
+        CoreModule,
+        MediaModule,
+        AuthModule,
+        UserModule,
+    ],
+    providers: [ClerkClientProvider],
 })
 export class AppModule {}
