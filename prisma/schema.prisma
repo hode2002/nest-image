@@ -20,14 +20,39 @@ model User {
 }
 
 model Image {
+  id          String         @id @default(uuid())
+  userId      String
+  publicId    String
+  originalUrl String
+  format      String
+  size        Int //bytes
+  width       Int?
+  height      Int?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  variants    ImageVariant[]
+
+  user User @relation(fields: [userId], references: [clerkId])
+}
+
+model ImageVariant {
   id        String   @id @default(uuid())
+  imageId   String
+  publicId  String
   url       String
-  publicId  String   @unique
   width     Int?
   height    Int?
-  userId    String
-  user      User     @relation(fields: [userId], references: [clerkId])
+  format    String? // jpeg, webp, etc.
+  quality   Int? // 1-100
+  blur      Float?
+  grayscale Boolean?
+  sharpen   Boolean?
+  crop      String? // center, entropy, attention...
+  fit       String? // cover, contain...
+  enhance   Boolean?
+  rotate    Int?
+  options   String
   createdAt DateTime @default(now())
 
-  @@map("images")
+  image Image @relation(fields: [imageId], references: [id])
 }
