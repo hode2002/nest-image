@@ -4,7 +4,6 @@ import {
     Delete,
     UploadedFile,
     UseInterceptors,
-    Param,
     BadRequestException,
     Inject,
     LoggerService,
@@ -14,7 +13,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { MEDIA_TOKENS } from 'src/api/v1/modules/media/constants/inject-token';
 import { IMediaCommandService } from 'src/api/v1/modules/media/interfaces/media-command.service.interface';
-import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('media')
 export class MediaController {
@@ -25,7 +23,6 @@ export class MediaController {
         private readonly mediaCommandService: IMediaCommandService,
     ) {}
 
-    @Public()
     @Post('upload')
     @UseInterceptors(FileInterceptor('file'))
     async uploadImage(@UploadedFile() file: Express.Multer.File) {
@@ -33,7 +30,6 @@ export class MediaController {
         return this.mediaCommandService.uploadImage(file);
     }
 
-    @Public()
     @Delete()
     async deleteImage(@Query('publicId') publicId: string) {
         if (!publicId) {
