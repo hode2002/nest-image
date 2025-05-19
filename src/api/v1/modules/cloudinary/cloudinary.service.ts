@@ -1,28 +1,27 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { Inject, Injectable, LoggerService } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiOptions } from 'cloudinary';
 import { CloudinaryUploadResult } from './interfaces/upload-result.interface';
 import * as streamifier from 'streamifier';
+import { ICloudinaryService } from 'src/api/v1/modules/cloudinary/interfaces/cloudinary.service.interface';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Injectable()
-export class CloudinaryService {
-    private readonly logger = new Logger(CloudinaryService.name);
+export class CloudinaryService implements ICloudinaryService {
+    constructor(
+        @Inject(WINSTON_MODULE_NEST_PROVIDER)
+        private readonly logger: LoggerService,
+    ) {}
 
     async uploadImage(
         file: Express.Multer.File,
         folder: string = 'nest-image',
-    ): Promise<{
-        url: string;
-        publicId: string;
-        width: number;
-        height: number;
-    }> {
+    ): Promise<CloudinaryUploadResult> {
         try {
             return new Promise((resolve, reject) => {
                 const uploadStream = cloudinary.uploader.upload_stream(
                     {
                         folder,
-                        resource_type: 'auto',
+                        resource_type: 'image',
                     },
                     (error, result) => {
                         if (error) {
@@ -35,9 +34,10 @@ export class CloudinaryService {
                             return;
                         }
                         const uploadResult = result as CloudinaryUploadResult;
+                        this.logger.log(`Upload for ${file?.originalname} successfully`);
                         resolve({
-                            url: uploadResult.secure_url,
-                            publicId: uploadResult.public_id,
+                            secure_url: uploadResult.secure_url,
+                            public_id: uploadResult.public_id,
                             width: uploadResult.width,
                             height: uploadResult.height,
                         });
@@ -58,6 +58,7 @@ export class CloudinaryService {
             if (result.result !== 'ok') {
                 throw new Error(`Failed to delete image: ${result.result}`);
             }
+            this.logger.log(`Image deleted successfully: ${publicId}`);
         } catch (error) {
             this.logger.error('Error in deleteImage:', error);
             throw error;
