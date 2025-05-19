@@ -36,10 +36,12 @@ export class CloudinaryService implements ICloudinaryService {
                         const uploadResult = result as CloudinaryUploadResult;
                         this.logger.log(`Upload for ${file?.originalname} successfully`);
                         resolve({
-                            secure_url: uploadResult.secure_url,
                             public_id: uploadResult.public_id,
+                            secure_url: uploadResult.secure_url,
+                            bytes: uploadResult.bytes,
+                            format: uploadResult.format,
                             width: uploadResult.width,
-                            height: uploadResult.height,
+                            height: uploadResult.width,
                         });
                     },
                 );
@@ -48,6 +50,51 @@ export class CloudinaryService implements ICloudinaryService {
             });
         } catch (error) {
             this.logger.error('Error in uploadImage:', error);
+            throw error;
+        }
+    }
+
+    async uploadBuffer(file: Buffer): Promise<CloudinaryUploadResult> {
+        try {
+            this.logger.log(`Uploading file to Cloudinary`, CloudinaryService.name);
+
+            return new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    {
+                        folder: 'transformed',
+                        resource_type: 'image',
+                    },
+                    (error, result) => {
+                        if (error) {
+                            this.logger.error('Error uploading to Cloudinary:', error);
+                            reject(error);
+                            return;
+                        }
+                        if (!result) {
+                            reject(new Error('No result from Cloudinary upload'));
+                            return;
+                        }
+                        const uploadResult = result as CloudinaryUploadResult;
+                        this.logger.log(`Upload successfully`);
+                        resolve({
+                            public_id: uploadResult.public_id,
+                            secure_url: uploadResult.secure_url,
+                            bytes: uploadResult.bytes,
+                            format: uploadResult.format,
+                            width: uploadResult.width,
+                            height: uploadResult.width,
+                        });
+                    },
+                );
+
+                uploadStream.end(file);
+            });
+        } catch (error) {
+            this.logger.error(
+                `Error in uploadFile: ${error.message}`,
+                error.stack,
+                CloudinaryService.name,
+            );
             throw error;
         }
     }
