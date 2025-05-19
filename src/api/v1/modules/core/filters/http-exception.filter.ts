@@ -4,13 +4,18 @@ import {
     ArgumentsHost,
     HttpException,
     HttpStatus,
-    Logger,
+    Inject,
+    LoggerService,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 
 @Catch()
 export class HttpExceptionFilter implements ExceptionFilter {
-    private readonly logger = new Logger(HttpExceptionFilter.name);
+    constructor(
+        @Inject(WINSTON_MODULE_NEST_PROVIDER)
+        private readonly logger: LoggerService,
+    ) {}
 
     catch(exception: unknown, host: ArgumentsHost) {
         const ctx = host.switchToHttp();
