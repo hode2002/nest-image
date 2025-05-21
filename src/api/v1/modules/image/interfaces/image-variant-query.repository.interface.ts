@@ -3,4 +3,5 @@ import { ImageVariantWhereInput } from 'src/api/v1/modules/image/types/query.typ
 
 export interface IImageVariantQueryRepository {
     findFirst(where: ImageVariantWhereInput): Promise<ImageVariant | null>;
+    findAll(where?: ImageVariantWhereInput): Promise<ImageVariant[]>;
 }

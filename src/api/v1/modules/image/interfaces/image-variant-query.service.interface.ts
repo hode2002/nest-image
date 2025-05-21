@@ -3,4 +3,5 @@ import { ImageVariantWhereInput } from 'src/api/v1/modules/image/types/query.typ
 
 export interface IImageVariantQueryService {
     findFirst(where: ImageVariantWhereInput): Promise<ImageVariant | null>;
+    getTransformedImage(imageId: string): Promise<ImageVariant[]>;
 }

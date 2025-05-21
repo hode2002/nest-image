@@ -20,6 +20,9 @@ import { ResponseMessage } from 'src/common/decorators/response-message.decorato
 import { IImageTransformService } from 'src/api/v1/modules/image/interfaces/image-transform.service.interface';
 import { TransformQuery } from 'src/api/v1/modules/image/dto/transform-query.dto';
 import { Public } from 'src/common/decorators/public.decorator';
+import { CurrentUser } from 'src/common/decorators/get-user.decorator';
+import { User } from '@clerk/backend';
+import { IImageVariantQueryService } from 'src/api/v1/modules/image/interfaces/image-variant-query.service.interface';
 
 @Controller('images')
 export class ImageController {
@@ -32,6 +35,8 @@ export class ImageController {
         private readonly imageQueryService: IImageQueryService,
         @Inject(IMAGE_TOKENS.SERVICES.TRANSFORM)
         private readonly imageTransformService: IImageTransformService,
+        @Inject(IMAGE_TOKENS.SERVICES.VARIANT_QUERY)
+        private readonly imageVariantQueryService: IImageVariantQueryService,
     ) {}
 
     @Post()
@@ -48,12 +53,27 @@ export class ImageController {
         return this.imageQueryService.findAll();
     }
 
+    @Get('user')
+    @ResponseMessage('Images retrieved successfully')
+    findUserImages(@CurrentUser() user: User) {
+        this.logger.log('Finding all images for user', ImageController.name);
+        return this.imageQueryService.findUserImages(user);
+    }
+
     @Get('transform/:id')
     @Public()
     @ResponseMessage('Image transform successfully')
     async transformImage(@Param('id') id: string, @Query() query: TransformQuery) {
         this.logger.log(`Transform image by id: ${id}`, ImageController.name);
         return this.imageTransformService.transformImage(id, query);
+    }
+
+    @Get(':id/transformed')
+    @Public()
+    @ResponseMessage('Image transform successfully')
+    async getTransformedImage(@Param('id') id: string) {
+        this.logger.log(`Finding transformed image: ${id}`, ImageController.name);
+        return this.imageVariantQueryService.getTransformedImage(id);
     }
 
     @Get(':id')

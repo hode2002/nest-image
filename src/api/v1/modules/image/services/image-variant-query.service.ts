@@ -15,6 +15,14 @@ export class ImageVariantQueryService implements IImageVariantQueryService {
         private readonly imageVariantQueryRepository: IImageVariantQueryRepository,
     ) {}
 
+    async getTransformedImage(imageId: string): Promise<ImageVariant[]> {
+        this.logger.log(`Finding transformed image: ${imageId}`, ImageVariantQueryService.name);
+        const where: ImageVariantWhereInput = {
+            imageId,
+        };
+        return this.imageVariantQueryRepository.findAll(where);
+    }
+
     async findFirst(where: ImageVariantWhereInput): Promise<ImageVariant | null> {
         this.logger.log(
             `Finding variant with options: ${JSON.stringify(where)}`,

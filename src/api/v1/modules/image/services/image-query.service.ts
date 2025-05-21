@@ -6,6 +6,7 @@ import { IImageQueryService } from '../interfaces/image-query.service.interface'
 import { IMAGE_TOKENS } from '../constants/inject-token';
 import { IImageQueryRepository } from '../interfaces/image-query.repository.interface';
 import { ImageWhereInput } from 'src/api/v1/modules/image/types/query.type';
+import { User } from '@clerk/backend';
 
 @Injectable()
 export class ImageQueryService implements IImageQueryService {
@@ -27,7 +28,7 @@ export class ImageQueryService implements IImageQueryService {
         return image;
     }
 
-    async getOriginalImageBuffer(imageId: string): Promise<Buffer> {
+    async getOriginalImage(imageId: string): Promise<{ url: string; buffer: Buffer }> {
         const image = await this.imageQueryRepository.findById(imageId);
         if (!image) {
             throw new NotFoundException('Image not found');
@@ -37,10 +38,13 @@ export class ImageQueryService implements IImageQueryService {
             responseType: 'arraybuffer',
         });
 
-        return Buffer.from(response.data);
+        return {
+            url: image.originalUrl,
+            buffer: Buffer.from(response.data),
+        };
     }
 
-    async findById(id: string, width?: number, height?: number): Promise<any> {
+    async findById(id: string): Promise<any> {
         this.logger.log(`Finding image by id: ${id}`, ImageQueryService.name);
 
         const image = await this.imageRepository.findById(id);
@@ -58,5 +62,10 @@ export class ImageQueryService implements IImageQueryService {
     async findAll(): Promise<any[]> {
         this.logger.log('Finding all images', ImageQueryService.name);
         return this.imageRepository.findAll();
+    }
+
+    async findUserImages(user: User): Promise<Image[]> {
+        this.logger.log('Finding all images', ImageQueryService.name);
+        return this.imageRepository.findUserImages(user);
     }
 }

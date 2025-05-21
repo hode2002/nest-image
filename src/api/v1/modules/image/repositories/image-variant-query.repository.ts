@@ -11,6 +11,15 @@ export class ImageVariantQueryRepository implements IImageVariantQueryRepository
     async findFirst(where: ImageVariantWhereInput): Promise<ImageVariant | null> {
         return this.prisma.imageVariant.findFirst({
             where,
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+    }
+
+    async findAll(where?: ImageVariantWhereInput): Promise<ImageVariant[]> {
+        return this.prisma.imageVariant.findMany({
+            where,
         });
     }
 }

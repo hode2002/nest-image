@@ -11,6 +11,8 @@ import { IImageQueryService } from 'src/api/v1/modules/image/interfaces/image-qu
 import { IImageVariantCommandService } from 'src/api/v1/modules/image/interfaces/image-variant-command.service.interface';
 import { CreateVariant } from 'src/api/v1/modules/image/types/create.type';
 import { IImageVariantQueryService } from 'src/api/v1/modules/image/interfaces/image-variant-query.service.interface';
+import axios from 'axios';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ImageTransformService implements IImageTransformService {
@@ -25,6 +27,7 @@ export class ImageTransformService implements IImageTransformService {
         private readonly imageQueryService: IImageQueryService,
         @Inject(IMAGE_TOKENS.SERVICES.VARIANT_QUERY)
         private readonly imageVariantQueryService: IImageVariantQueryService,
+        private readonly configService: ConfigService,
     ) {}
 
     async transformImage(id: string, query: TransformQuery): Promise<any> {
@@ -37,9 +40,6 @@ export class ImageTransformService implements IImageTransformService {
             return existingVariant;
         }
 
-        const buffer = await this.imageQueryService.getOriginalImageBuffer(id);
-        let transformer = sharp(buffer);
-
         const width = query.w ? parseInt(query.w) : 800;
         const height = query.h ? parseInt(query.h) : 600;
         const fit = query.fit || sharp.fit.cover;
@@ -51,6 +51,14 @@ export class ImageTransformService implements IImageTransformService {
         const sharpen = query.sharpen === 'true';
         const enhance = query.enhance === 'true';
         const rotate = query.rotate ? parseInt(query.rotate) : null;
+
+        let { url, buffer } = await this.imageQueryService.getOriginalImage(id);
+        let transformer = sharp(buffer);
+
+        if (enhance) {
+            buffer = await this.enhanceImageByUrl(url);
+            transformer = sharp(buffer);
+        }
 
         if (width || height) {
             transformer = transformer.resize({
@@ -144,6 +152,18 @@ export class ImageTransformService implements IImageTransformService {
             this.logger.error(`Error transforming and uploading image: ${error.message}`);
             throw error;
         }
+    }
+
+    private async enhanceImageByUrl(imageUrl: string): Promise<Buffer> {
+        const realEsrganUrl = this.configService.get('REAL_ESRGAN_URL', 'localhost:3002');
+
+        const response = await axios.post(
+            realEsrganUrl + '/enhance',
+            { url: imageUrl },
+            { responseType: 'arraybuffer' },
+        );
+
+        return Buffer.from(response.data);
     }
 
     async getImageMetadata(imageBuffer: Buffer): Promise<sharp.Metadata> {
