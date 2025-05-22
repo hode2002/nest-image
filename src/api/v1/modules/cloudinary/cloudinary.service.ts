@@ -14,7 +14,7 @@ export class CloudinaryService implements ICloudinaryService {
 
     async uploadImage(
         file: Express.Multer.File,
-        folder: string = 'nest-image',
+        folder: string = 'original',
     ): Promise<CloudinaryUploadResult> {
         try {
             return new Promise((resolve, reject) => {
