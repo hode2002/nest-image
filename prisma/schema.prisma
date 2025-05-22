@@ -49,7 +49,7 @@ model ImageVariant {
   sharpen   Boolean?
   crop      String? // center, entropy, attention...
   fit       String? // cover, contain...
-  enhance   Boolean?
+  enhance   String?
   rotate    Int?
   options   String
   createdAt DateTime @default(now())

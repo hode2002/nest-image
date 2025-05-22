@@ -1,4 +1,5 @@
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import { EnhanceSize } from 'src/api/v1/modules/image/types/enhance.type';
 
 export class CreateImageVariantDto {
     @IsString()
@@ -46,9 +47,9 @@ export class CreateImageVariantDto {
     @IsOptional()
     fit?: string;
 
-    @IsBoolean()
+    @IsEnum(['2x', '4x', '8x'])
     @IsOptional()
-    enhance?: boolean;
+    enhance?: EnhanceSize;
 
     @IsNumber()
     @IsOptional()

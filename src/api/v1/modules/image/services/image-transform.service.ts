@@ -13,6 +13,7 @@ import { CreateVariant } from 'src/api/v1/modules/image/types/create.type';
 import { IImageVariantQueryService } from 'src/api/v1/modules/image/interfaces/image-variant-query.service.interface';
 import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
+import { EnhanceResult, EnhanceSize } from 'src/api/v1/modules/image/types/enhance.type';
 
 @Injectable()
 export class ImageTransformService implements IImageTransformService {
@@ -49,15 +50,22 @@ export class ImageTransformService implements IImageTransformService {
         const blur = query.blur ? parseFloat(query.blur) : null;
         const grayscale = query.grayscale === 'true';
         const sharpen = query.sharpen === 'true';
-        const enhance = query.enhance === 'true';
+        const enhance = (query.enhance as EnhanceSize) || '2x';
         const rotate = query.rotate ? parseInt(query.rotate) : null;
 
         let { url, buffer } = await this.imageQueryService.getOriginalImage(id);
         let transformer = sharp(buffer);
 
         if (enhance) {
-            buffer = await this.enhanceImageByUrl(url);
-            transformer = sharp(buffer);
+            const { success, data } = await this.enhanceImageByUrl(url, enhance);
+            if (success) {
+                const response = await axios.get(data.enhancedImageUrl, {
+                    responseType: 'arraybuffer',
+                });
+                const buffer = Buffer.from(response.data);
+                transformer = sharp(buffer);
+                transformer = transformer.normalise();
+            }
         }
 
         if (width || height) {
@@ -105,7 +113,6 @@ export class ImageTransformService implements IImageTransformService {
         if (blur && blur > 0) transformer = transformer.blur(blur);
         if (sharpen) transformer = transformer.sharpen();
         if (rotate) transformer = transformer.rotate(rotate);
-        if (enhance) transformer = transformer.normalize();
 
         switch (format) {
             case 'jpeg':
@@ -154,16 +161,13 @@ export class ImageTransformService implements IImageTransformService {
         }
     }
 
-    private async enhanceImageByUrl(imageUrl: string): Promise<Buffer> {
-        const realEsrganUrl = this.configService.get('REAL_ESRGAN_URL', 'localhost:3002');
-
-        const response = await axios.post(
-            realEsrganUrl + '/enhance',
-            { url: imageUrl },
-            { responseType: 'arraybuffer' },
-        );
-
-        return Buffer.from(response.data);
+    private async enhanceImageByUrl(imageUrl: string, size: EnhanceSize): Promise<EnhanceResult> {
+        const enhanceUrl = this.configService.get<string>('ENHANCE_API_URL', 'localhost:3002');
+        const response = await axios.post<EnhanceResult>(`${enhanceUrl}/enhance`, {
+            image: imageUrl,
+            size,
+        });
+        return response.data;
     }
 
     async getImageMetadata(imageBuffer: Buffer): Promise<sharp.Metadata> {
