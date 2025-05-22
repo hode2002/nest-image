@@ -41,7 +41,7 @@ export class CloudinaryService implements ICloudinaryService {
                             bytes: uploadResult.bytes,
                             format: uploadResult.format,
                             width: uploadResult.width,
-                            height: uploadResult.width,
+                            height: uploadResult.height,
                         });
                     },
                 );
@@ -82,7 +82,7 @@ export class CloudinaryService implements ICloudinaryService {
                             bytes: uploadResult.bytes,
                             format: uploadResult.format,
                             width: uploadResult.width,
-                            height: uploadResult.width,
+                            height: uploadResult.height,
                         });
                     },
                 );
