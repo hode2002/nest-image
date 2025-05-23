@@ -4,9 +4,10 @@ import { MediaUploadResult } from 'src/api/v1/modules/media/interfaces/upload-re
 import { ConfigService } from '@nestjs/config';
 import { ICloudinaryService } from 'src/api/v1/modules/cloudinary/interfaces/cloudinary.service.interface';
 import { CLOUDINARY_TOKENS } from 'src/api/v1/modules/cloudinary/constants/inject-token';
+import { IMediaCommandService } from 'src/api/v1/modules/media/interfaces/media-command.service.interface';
 
 @Injectable()
-export class MediaCommandService {
+export class MediaCommandService implements IMediaCommandService {
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService;
     private readonly MAX_FILE_SIZE: number;
@@ -39,6 +40,28 @@ export class MediaCommandService {
             };
         } catch (error) {
             this.logger.error(`Failed to upload image: ${file.originalname}`, error);
+            throw error;
+        }
+    }
+
+    async uploadByUrl(url: string): Promise<MediaUploadResult> {
+        try {
+            const uploadResult = await this.uploadService.uploadUrl(url);
+            const {
+                secure_url: secureUrl,
+                public_id: publicId,
+                bytes: size,
+                ...rest
+            } = uploadResult;
+
+            return {
+                url: secureUrl,
+                publicId,
+                size,
+                ...rest,
+            };
+        } catch (error) {
+            this.logger.error(`Failed to upload image url: ${url}`, error);
             throw error;
         }
     }
