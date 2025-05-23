@@ -99,6 +99,53 @@ export class CloudinaryService implements ICloudinaryService {
         }
     }
 
+    async uploadUrl(url: string): Promise<CloudinaryUploadResult> {
+        try {
+            this.logger.log(
+                `Uploading image from URL to Cloudinary: ${url}`,
+                CloudinaryService.name,
+            );
+
+            return new Promise((resolve, reject) => {
+                cloudinary.uploader.upload(
+                    url,
+                    {
+                        folder: 'original',
+                        resource_type: 'image',
+                    },
+                    (error, result) => {
+                        if (error) {
+                            this.logger.error('Error uploading URL to Cloudinary:', error);
+                            reject(error);
+                            return;
+                        }
+                        if (!result) {
+                            reject(new Error('No result from Cloudinary upload'));
+                            return;
+                        }
+                        const uploadResult = result as CloudinaryUploadResult;
+                        this.logger.log(`URL upload successfully`);
+                        resolve({
+                            public_id: uploadResult.public_id,
+                            secure_url: uploadResult.secure_url,
+                            bytes: uploadResult.bytes,
+                            format: uploadResult.format,
+                            width: uploadResult.width,
+                            height: uploadResult.height,
+                        });
+                    },
+                );
+            });
+        } catch (error) {
+            this.logger.error(
+                `Error in uploadUrl: ${error.message}`,
+                error.stack,
+                CloudinaryService.name,
+            );
+            throw error;
+        }
+    }
+
     async deleteImage(publicId: string): Promise<void> {
         try {
             const result = await cloudinary.uploader.destroy(publicId);
