@@ -15,7 +15,6 @@ import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { MEDIA_TOKENS } from 'src/api/v1/modules/media/constants/inject-token';
 import { UploadImageUrlDto } from 'src/api/v1/modules/media/dto/upload-url.dto';
 import { IMediaCommandService } from 'src/api/v1/modules/media/interfaces/media-command.service.interface';
-import { Public } from 'src/common/decorators/public.decorator';
 
 @Controller('media')
 export class MediaController {
@@ -33,7 +32,6 @@ export class MediaController {
         return this.mediaCommandService.uploadImage(file);
     }
 
-    @Public()
     @Post('upload-url')
     async uploadByUrl(@Body() body: UploadImageUrlDto) {
         this.logger.log(`Processing upload url: ${body.imageUrl}`);
